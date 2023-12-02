@@ -45,3 +45,8 @@ for game in split_data4:
 
 sum_valid_games = sum(game[0]["ID"] * (game[1]["red"] <= 12) * (game[1]["green"] <= 13) * (game[1]["blue"] <= 14) for game in split_data5)
 print("Sum of ID's of possible games: ", sum_valid_games)
+
+# Part 2
+sum_power_minimal_cubes = sum((game[1]["red"] * game[1]["green"] * game[1]["blue"]) for game in split_data5)
+print("Sum of powers of minimal cube numbers: ", sum_power_minimal_cubes)
+
