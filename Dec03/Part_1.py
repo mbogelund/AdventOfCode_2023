@@ -69,15 +69,15 @@ for line in data:
     for symbol in symbols:
         position = line.find(symbol, position)
         symbol_data = (line_number, symbol, position, position + len(symbol) - 1)
-        position += 1
+        position = position + len(symbol)
         #print(symbol_data)
         row_id = insert_symbol(db, symbol_data)
     position = 0
     for number in numbers:
         position = line.find(number, position)
         number_data = (line_number, number, position, position + len(number) - 1)
-        position += 1
-        #print(number_data)
+        position = position + len(number)
+        print(number_data)
         row_id = insert_number(db, number_data)
     #print(line_number)
     line_number += 1
@@ -97,6 +97,7 @@ AND nbr.end_position + 1 >= sbl.start_position")
 cur = db.execute("SELECT sum(part_number) from part_numbers")
 query_result = cur.fetchall()
 print(query_result)
+# Result: 554003
 
 # Cleanup
 if db:
