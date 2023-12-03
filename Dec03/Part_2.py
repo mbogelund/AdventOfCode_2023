@@ -98,7 +98,7 @@ ORDER BY s.symbol_line_number, s.symbol_start_position, left_part_number, right_
 cur = db.execute("SELECT sum(gear_ratio) from gear_ratios")
 query_result = cur.fetchall()
 print(query_result)
-# Result: 
+# Result: 87263515
 
 
 # Cleanup
