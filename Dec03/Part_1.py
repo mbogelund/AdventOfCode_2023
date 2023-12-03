@@ -77,11 +77,11 @@ for line in data:
         position = line.find(number, position)
         number_data = (line_number, number, position, position + len(number) - 1)
         position = position + len(number)
-        print(number_data)
+        #print(number_data)
         row_id = insert_number(db, number_data)
     #print(line_number)
     line_number += 1
-    print(line)
+    #print(line)
 
 
 db.execute("DROP TABLE IF EXISTS part_numbers")
