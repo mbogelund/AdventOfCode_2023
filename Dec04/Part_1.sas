@@ -115,3 +115,46 @@ data WORK.PART1;
 run;
 
 
+/* Part 2 */
+
+data WORK.cascade;
+  set WORK.scan;
+  * multiplyer(0) is the multiplyer of current card;
+  * multiplyer(&count_winning_numbers. + 2) will always be 1, since it cant be affected by winnings;
+  * That way we can move its value down 1 index in the steps below to initialize cards in the winning range;
+  array multiplyer{%eval(&count_winning_numbers. + 2)} m0-m%eval(&count_winning_numbers. + 1);
+  retain multiplyer;
+  retain total_cards 0;
+  if _N_ = 1 then do;
+    * Initialize array of multiplyers;
+    * M0 is multiplyer for current card/row - its value is discarded later in the general step below;
+    do i = 1 to &count_winning_numbers. + 2;
+      multiplyer(i) = 1;
+    end;
+  end;
+  * Move multiplyers 1 index down;
+  do i = 1 to &count_winning_numbers. + 1;
+    multiplyer(i) = multiplyer(i + 1); * Set m0 = m1, m1 = m2, etc.;
+    if 1 < i <= wins + 1 then do;
+      * All multiplyers after the current card m0 get their multiplyer updated by wins of current card;
+      multiplyer(i) = multiplyer(i) + multiplyer(1);
+    end;
+  end;
+
+  total_cards = total_cards + multiplyer(1);
+run;
+
+proc sql NOPRINT;
+  create table WORK.TOTAL_CARDS as
+  select max(TOTAL_CARDS) as total_cards
+  from WORK.cascade
+  ;
+quit;
+data WORK.PART2;
+  set WORK.TOTAL_CARDS(obs=1);
+  put 'Total cards: ' total_cards;
+run;
+
+
+/* Result: 12648035 */
+/* Evaluation: Correct! */
