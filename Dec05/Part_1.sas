@@ -22,8 +22,8 @@
 libname dat "&execPath.data";
 
 /* Import raw input */
-filename in_file "&execPath.Input&pdlm.input.txt";
-*filename in_file "&execPath.Input&pdlm.example.txt";
+*filename in_file "&execPath.Input&pdlm.input.txt";
+filename in_file "&execPath.Input&pdlm.example.txt";
 data WORK.input;
   length inline $ 1024;
   infile in_file;
@@ -166,6 +166,7 @@ proc sql;
   ;
 quit;
 
+/* Part 1 seeds */
 data WORK.seeds;
   set WORK.tables;
   where scan(INLINE, 1, ':') = 'seeds';
@@ -178,6 +179,7 @@ data WORK.seeds;
 
   end;
 run;
+/* Part 1 seeds */
 
 filename tbl_crte "&execPath.table_creator.sas";
 data WORK.TABLE_CREATOR;
@@ -266,11 +268,95 @@ data WORK.PART1;
   put 'Answer to part 1: ' part_1_answer;
 run;
 
-/* Result:  */
-/* Evaluation:  */
+/* Result:  261668924 */
+/* Evaluation: Correct */
 
 
 /* Part 2? */
+
+/* Part 2 seeds */
+data WORK.seeds2;
+  set WORK.tables;
+  where scan(INLINE, 1, ':') = 'seeds';
+  seeds_list = trim(left(scan(INLINE, 2, ':')));
+  c_seed_start = trim(left(scan(seeds_list, 1, ' ')));
+  c_seed_range = trim(left(scan(seeds_list, 2, ' ')));
+  do idx = 3 to 1001 by 2 while (c_seed_start ^= '');
+    seed_start = input(c_seed_start, 12.);
+    seed_range = input(c_seed_range, 12.);
+    seed_end = seed_start + seed_range - 1;
+    output;
+    c_seed_start = trim(left(scan(seeds_list, idx, ' ')));
+    c_seed_range = trim(left(scan(seeds_list, idx + 1, ' ')));
+  end;
+run;
+
+/* Reuse table creator from part 1 */
+
+/* Join-creator */
+filename joincrte "&execPath.join_creator2.sas";
+data WORK.JOIN_CREATOR2;
+  set WORK.mapping_order;
+  file joincrte;
+  where MAPPING ^= '';
+  length putline         $ 1024
+         from_table      $   32
+         from_var        $   32
+         range_start_var $   32
+         range_end_var   $   32
+         ;
+
+  retain from_table 'seeds2'
+         from_var   'seed'
+  ;
+
+  range_start_var = compress(from_var) || '_START';
+  range_end_var = compress(from_var) || '_END';
+
+  putline = 'proc sql;';
+  put putline;
+
+  putline = 'create table WORK.seeds2_to_' || compress(area_type) || ' as';
+  put putline;
+  putline = 'select ';
+  put putline;
+  if from_var ^= 'seed' then do;
+    putline = 'a.seed_START, a.seed_END, ';
+    put putline;
+  end;
+  putline = ' a.' || compress(range_start_var) || ',';
+  put putline;
+  putline = ' a.' || compress(range_end_var) || ',';
+  put putline;
+
+  putline = 'coalesce(max(a.' || compress(range_start_var) || ', b.SOURCE_RANGE_START) + b.offset, a.' || compress(range_start_var) || ') as ' || compress(area_type) || '_START,';
+  put putline;
+  putline = 'coalesce(min(a.' || compress(range_end_var) || ', b.SOURCE_RANGE_END) + b.offset, a.' || compress(range_end_var) || ') as ' || compress(area_type) || '_END,';
+  put putline;
+
+  putline = ' b.*';
+  put putline;
+  putline = 'from WORK.' || compress(from_table) || ' a';
+  put putline;
+  putline = 'LEFT JOIN WORK.' || compress(translate(mapping, '_', '-')) || ' b';
+  put putline;
+  putline = 'on (a.' || compress(range_start_var) || ' >= b.SOURCE_RANGE_START and ' || compress(range_end_var) || ' <= b.SOURCE_RANGE_END)';  /* Interval is entirely contained */
+  put putline;
+  putline = 'or (a.' || compress(range_start_var) || ' < b.SOURCE_RANGE_START and ' || compress(range_end_var) || ' >= b.SOURCE_RANGE_START)'; /* End of interval is contained */
+  put putline;
+  putline = 'or (a.' || compress(range_start_var) || ' < b.SOURCE_RANGE_END and ' || compress(range_end_var) || ' >= b.SOURCE_RANGE_END)'; /* End of interval is contained */
+  put putline;
+
+  putline = ';quit;';
+  put putline;
+  
+  output;
+  from_table = 'seeds2_to_' || compress(area_type);
+  from_var = compress(area_type);
+run;
+%include joincrte;
+filename joincrte CLEAR;
+
 
 
 /* Result:  */
