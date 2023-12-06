@@ -120,6 +120,57 @@ run;
 
 /* Part 2? */
 
+data WORK.RACE_TIMES2;
+  set WORK.T_RACE_TIMES;
+  length ctime           $ 16
+         cdistance       $ 16
+         time_ms            8
+         distance_record    8
+  ;
+  ctime = compress(time);
+  cdistance = compress(distance);
+
+  time_ms = input(ctime, 12.);
+  distance_mm = input(cdistance, 12.);
+run;
+
+data WORK.RACE_CALCULATIONS2 WORK.PART2;
+  set WORK.RACE_TIMES2 end=last;
+  retain product 1;
+
+  wins1 = (-1 * TIME_MS + sqrt(TIME_MS**2 - 4 * DISTANCE_MM)) / (2 * (-1));
+  wins2 = (-1 * TIME_MS - sqrt(TIME_MS**2 - 4 * DISTANCE_MM)) / (2 * (-1));
+
+  
+  wins_min = min(wins1, wins2);
+  wins_max = max(wins1, wins2);
+
+  /* We have to win, tie doesnt work */
+  if floor(wins_min) = ceil(wins_min) then do;
+    wins_min = wins_min + 1;
+  end;
+  else do;
+    wins_min = ceil(wins_min);
+  end;
+  
+  if floor(wins_max) = ceil(wins_max) then do;
+    wins_max = wins_max - 1;
+  end;
+  else do;
+    wins_max = floor(wins_max);
+  end;
+ 
+  wins = wins_max - wins_min + 1;
+
+  product = product * wins;
+  output WORK.RACE_CALCULATIONS2;
+  if last then do;
+    put 'Answer to part 2: ' product;
+    output WORK.PART2;
+  end;
+run;
+
+
 
 /* Result:  */
 /* Evaluation:  */
