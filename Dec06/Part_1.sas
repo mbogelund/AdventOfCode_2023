@@ -130,8 +130,8 @@ data WORK.RACE_TIMES2;
   ctime = compress(time);
   cdistance = compress(distance);
 
-  time_ms = input(ctime, 12.);
-  distance_mm = input(cdistance, 12.);
+  time_ms = input(ctime, 16.);
+  distance_mm = input(cdistance, 16.);
 run;
 
 data WORK.RACE_CALCULATIONS2 WORK.PART2;
@@ -172,5 +172,8 @@ run;
 
 
 
-/* Result:  */
-/* Evaluation:  */
+/* Result: 35925555 */
+/* Evaluation: too high */
+
+/* Result: 21039729 */
+/* Evaluation: Correct! */
