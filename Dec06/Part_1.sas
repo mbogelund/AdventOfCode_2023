@@ -22,8 +22,8 @@
 libname dat "&execPath.data";
 
 /* Import raw input */
-*filename in_file "&execPath.Input&pdlm.input.txt";
-filename in_file "&execPath.Input&pdlm.example.txt";
+filename in_file "&execPath.Input&pdlm.input.txt";
+*filename in_file "&execPath.Input&pdlm.example.txt";
 data WORK.input;
   length inline $ 1024;
   infile in_file;
@@ -45,24 +45,77 @@ quit;
 
 /* Part 1 */
 
-data _NULL_;
-  set WORK.input(obs=1);
+data WORK.RAW_RACE_TIMES;
+  set WORK.INPUT;
+  length datatype $  32
+         cvalues  $ 256
+  ;
+  datatype = trim(left(scan(INLINE, 1, ':')));
+  cvalues = trim(left(scan(INLINE, 2, ':')));
+  keep datatype cvalues;
 run;
-%put Some info...;
-%put some more info...;
-
-data WORK.scan;
-  set WORK.input;
-  /* ... */
+proc transpose data=WORK.RAW_RACE_TIMES out=WORK.T_RACE_TIMES;
+  id datatype;
+  var cvalues;
+run;
+data WORK.RACE_TIMES;
+  set WORK.T_RACE_TIMES;
+  length ctime           $ 16
+         cdistance       $ 16
+         time_ms            8
+         distance_record    8
+  ;
+  ctime = scan(time, 1, ' ');
+  cdistance = scan(distance, 1, ' ');
+  do idx = 2 to 25 while(ctime ^='');
+    time_ms = input(ctime, 12.);
+    distance_mm = input(cdistance, 12.);
+    output;
+    ctime = scan(time, idx, ' ');
+    cdistance = scan(distance, idx, ' ');
+  end;
 run;
 
-data WORK.PART1;
-  *set WORK.whatever(obs=1);
-  put 'Answer to part 1: ' part_1_answer;
+data WORK.RACE_CALCULATIONS WORK.PART1;
+  set WORK.RACE_TIMES end=last;
+  retain product 1;
+
+  wins1 = (-1 * TIME_MS + sqrt(TIME_MS**2 - 4 * DISTANCE_MM)) / (2 * (-1));
+  wins2 = (-1 * TIME_MS - sqrt(TIME_MS**2 - 4 * DISTANCE_MM)) / (2 * (-1));
+
+  
+  wins_min = min(wins1, wins2);
+  wins_max = max(wins1, wins2);
+
+  /* We have to win, tie doesnt work */
+  if floor(wins_min) = ceil(wins_min) then do;
+    wins_min = wins_min + 1;
+  end;
+  else do;
+    wins_min = ceil(wins_min);
+  end;
+  
+  if floor(wins_max) = ceil(wins_max) then do;
+    wins_max = wins_max - 1;
+  end;
+  else do;
+    wins_max = floor(wins_max);
+  end;
+ 
+  wins = wins_max - wins_min + 1;
+
+  product = product * wins;
+  output WORK.RACE_CALCULATIONS;
+  if last then do;
+    put 'Answer to part 1: ' product;
+    output WORK.PART1;
+  end;
 run;
 
-/* Result:  */
-/* Evaluation:  */
+
+
+/* Result: 114400 */
+/* Evaluation: Correct! */
 
 
 /* Part 2? */
