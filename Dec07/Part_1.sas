@@ -22,8 +22,8 @@
 libname dat "&execPath.data";
 
 /* Import raw input */
-*filename in_file "&execPath.Input&pdlm.input.txt";
-filename in_file "&execPath.Input&pdlm.example.txt";
+filename in_file "&execPath.Input&pdlm.input.txt";
+*filename in_file "&execPath.Input&pdlm.example.txt";
 data WORK.input;
   length inline $ 1024;
   infile in_file;
@@ -68,6 +68,23 @@ data  WORK.CARDS;
 run;
 %put &=card_match_string;
 
+data WORK.HAND_TYPES;
+  length configuration_string $ 5
+         hand_strength          8
+  ;
+  retain hand_strength 0;
+  input configuration_string $;
+  hand_strength = hand_strength +1;
+cards;
+1111
+2111
+221
+311
+32
+41
+5
+run;
+
 data WORK.CARDS_ARRAY;
   set WORK.CARDS end=last;
   retain L1-L14;
@@ -79,9 +96,10 @@ run;
 
 data WORK.HANDS_AND_BIDS;
   set WORK.INPUT;
-  length hand          $ 5
-         bid             8
-         strength_temp   8
+  length hand                 $ 5
+         hand_sorted          $ 5
+         configuration_string $ 5
+         bid                    8
          ;
   array strength{5}               S1-S5;
   array strength_sorted{5}        SS1-SS5;
@@ -129,28 +147,55 @@ data WORK.HANDS_AND_BIDS;
       end;
     end;
   end;
+
+  do idx = 1 to length(hand);
+    if configuration_sorted(idx) ^= . then do;
+      configuration_string = compress(configuration_string) || compress(put(configuration_sorted(idx), 16.));
+    end;
+    hand_sorted = compress(hand_sorted) || substr("&card_match_string.", strength_sorted(idx), 1);
+  end;
 run;
 
+proc sql;
+  create table WORK.HAND_STRENGTH as
+  select h.INLINE,
+         h.HAND,
+         h.HAND_SORTED,
+         h.CONFIGURATION_STRING,
+         t.HAND_STRENGTH,
+         h.BID,
+         h.S1,
+         h.S2,
+         h.S3,
+         h.S4,
+         h.S5
+  from WORK.HANDS_AND_BIDS h
+  LEFT JOIN WORK.HAND_TYPES t
+    on h.CONFIGURATION_STRING = t.CONFIGURATION_STRING
+  order by HAND_STRENGTH , S1, S2, S3, S4, S5
+  ;
+quit;
 
-
-data _NULL_;
-  set WORK.input(obs=1);
+data WORK.HAND_RANK_AND_WINNING;
+  set WORK.HAND_STRENGTH;
+  RANK = _N_;
+  WINNING = BID * RANK;
 run;
-%put Some info...;
-%put some more info...;
 
-data WORK.scan;
-  set WORK.input;
-  /* ... */
-run;
+proc sql;
+  create table WORK.TOTAL_WINNINGS as
+  select sum(WINNING) as part_1_answer
+  from WORK.HAND_RANK_AND_WINNING
+  ;
+quit;
 
 data WORK.PART1;
-  *set WORK.whatever(obs=1);
+  set WORK.TOTAL_WINNINGS(obs=1);
   put 'Answer to part 1: ' part_1_answer;
 run;
 
-/* Result:  */
-/* Evaluation:  */
+/* Result: 252295678 */
+/* Evaluation: Correct! */
 
 
 /* Part 2? */
