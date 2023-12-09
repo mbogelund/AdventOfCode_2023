@@ -93,6 +93,15 @@ db.execute("DELETE FROM SEQUENCES")
 lines = []
 line_number = 0
 for line in data:
+
+    # Part 2 --->
+    reverse_line_list = [int(item) for item in line.split()]
+    #print(reverse_line_list)
+    reverse_line_list.reverse()
+    #print(reverse_line_list)
+    line =' '.join([str(item) for item in reverse_line_list])
+    # <--- Part 2
+
     line_number += 1
     if line:
         row_id = insert_input_line(db, (line_number, line))
@@ -105,6 +114,12 @@ print(part_1_answer)
 
 # Result: 1974913025
 # Evaluation: Correct!
+
+
+# Part 2
+# Oh, come on!
+
+
 
 # Cleanup
 if db:
