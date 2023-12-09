@@ -1,5 +1,5 @@
 # AoC 2023
-# Dec06
+# Dec08
 
 import re
 import sqlite3
@@ -17,36 +17,9 @@ def create_connection(db_file):
 
     return conn
 
-def insert_symbol(conn, symbol_tuple):
-    """
-    Insert symbol
-    :param conn:
-    :param symbol:
-    :return: row id
-    """
-    sql = ''' INSERT INTO symbols(line_number, symbol, start_position, end_position)
-              VALUES(?,?,?,?) '''
-    cur = conn.cursor()
-    cur.execute(sql, symbol_tuple)
-    conn.commit()
-    return cur.lastrowid
-
-def insert_number(conn, number_tuple):
-    """
-    Insert number
-    :param conn:
-    :param number:
-    :return: row id
-    """
-    sql = ''' INSERT INTO numbers(line_number, number, start_position, end_position)
-              VALUES(?,?,?,?) '''
-    cur = conn.cursor()
-    cur.execute(sql, number_tuple)
-    conn.commit()
-    return cur.lastrowid
-
 # Import today's data
 data = [l.strip() for l in open("Input/input.txt", "rt")]
+#data = [l.strip() for l in open("Input/example.txt", "rt")]
 #print(data)
 
 
@@ -54,53 +27,58 @@ data = [l.strip() for l in open("Input/input.txt", "rt")]
 
 # Create needed database tables
 db = create_connection(r"data/pythonsqlite.db")
-db.execute("CREATE TABLE IF NOT EXISTS symbols (line_number NUMBER, symbol TEXT, start_position NUMBER, end_position NUMBER)")
-db.execute("DELETE FROM symbols")
-db.execute("CREATE TABLE IF NOT EXISTS numbers (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
-db.execute("DELETE FROM numbers")
+#db.execute("CREATE TABLE IF NOT EXISTS symbols (line_number NUMBER, symbol TEXT, start_position NUMBER, end_position NUMBER)")
+#db.execute("DELETE FROM symbols")
+#db.execute("CREATE TABLE IF NOT EXISTS numbers (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
+#db.execute("DELETE FROM numbers")
 
 
 lines = []
-line_number = 0
+nodes_dict = {}
+node_number = 0
+first_key = 'AAA'
 for line in data:
-    symbols = re.sub('\d', ' ', line).replace('.', ' ').split()
-    #print(symbols)
-    numbers =  re.sub('\D', ' ', line).replace('.', ' ').split()
-    #print(numbers)
+    if line:
+        if line.find('=') < 0:
+            sequence = line
+        else:
+            node_number = node_number + 1
+            key = line.split("=")[0].strip()
+            if not first_key:
+                first_key = key
+            #print(key)
+            vertices = (line.split("=")[1].split(",")[0].strip(", ()"), line.split("=")[1].split(",")[1].strip(", ()"))
+            #print(vertices)
+            nodes_dict[key] = vertices
 
-    position = 0
-    for symbol in symbols:
-        position = line.find(symbol, position)
-        symbol_data = (line_number, symbol, position, position + len(symbol) - 1)
-        position = position + len(symbol)
-        #print(symbol_data)
-        row_id = insert_symbol(db, symbol_data)
-    position = 0
-    for number in numbers:
-        position = line.find(number, position)
-        number_data = (line_number, number, position, position + len(number) - 1)
-        position = position + len(number)
-        #print(number_data)
-        row_id = insert_number(db, number_data)
-    #print(line_number)
-    line_number += 1
-    #print(line)
+print(sequence)
+#print(nodes_dict)
+print(first_key)
 
+step_count = 0
+idx = 0
+current_key = first_key
+while current_key != 'ZZZ' and step_count < 100000:
+    step_count = step_count + 1
+    current_vertices = nodes_dict[current_key]
+    if idx >= len(sequence):
+        idx = 0
+    if sequence[idx] == 'L':
+        tuple_idx = 0
+    if sequence[idx] == 'R':
+        tuple_idx = 1
+    current_key = current_vertices[tuple_idx]
+    print(sequence[idx], ' -> ', current_key)
+    idx = idx + 1
 
-db.execute("DROP TABLE IF EXISTS part_numbers")
-db.execute("CREATE TABLE part_numbers AS select distinct nbr.line_number, \
-                                                         sbl.line_number as symbol_line_number, \
-                                                         nbr.number as part_number, \
-                                                         sbl.symbol \
-FROM numbers AS nbr INNER JOIN symbols as sbl ON \
-nbr.line_number - 1 <= sbl.line_number AND nbr.line_number + 1 >= sbl.line_number \
-AND nbr.start_position - 1 <= sbl.end_position \
-AND nbr.end_position + 1 >= sbl.start_position")
+print(step_count)
 
-cur = db.execute("SELECT sum(part_number) from part_numbers")
-query_result = cur.fetchall()
-print(query_result)
-# Result: 554003
+# Result: 921
+# Evaluation: Too low!
+
+# Result: 18727
+# Evaluation: Correct!
+
 
 # Cleanup
 if db:
