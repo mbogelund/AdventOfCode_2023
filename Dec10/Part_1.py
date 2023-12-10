@@ -35,7 +35,7 @@ def find_2_connections(node_tuple, lines):
     connections_list = []
 
     this_char = lines[node_tuple[0]][node_tuple[1]]
-    print(this_char)
+    #print(this_char)
 
     # Connection above
     if node_tuple[0] > 0:
@@ -62,12 +62,12 @@ def find_2_connections(node_tuple, lines):
         if below_char in ["S", "|", "L", "J"] and this_char in ["S", "|", "7", "F"]:
             connections_list.append((node_tuple[0] + 1, node_tuple[1]))
     
-    print(connections_list)
+    #print(connections_list)
     return connections_list[0], connections_list[1]
 
 # Import today's data
-data = [l.strip() for l in open("Input/example.txt", "rt")]
-#data = [l.strip() for l in open("Input/input.txt", "rt")]
+#data = [l.strip() for l in open("Input/example.txt", "rt")]
+data = [l.strip() for l in open("Input/input.txt", "rt")]
 #print(data)
 
 
@@ -143,7 +143,7 @@ for direction in range(0, 2):
     current_distance = current_distance + 1
     distance_rows[current_cell[0]][current_cell[1]] = current_distance
     
-    while current_char != start_char and current_distance < 100:
+    while current_char != start_char and current_distance < 10000:
         # Register info on current cell
         registered_distance = distance_rows[current_cell[0]][current_cell[1]]
         if registered_distance == 0:
@@ -151,7 +151,7 @@ for direction in range(0, 2):
         else:
             distance_rows[current_cell[0]][current_cell[1]] = min(current_distance, registered_distance)
             max_distance = max(max_distance, min(current_distance, registered_distance))
-        print(distance_rows)
+        #print(distance_rows)
         connection1, connection2 = find_2_connections(current_cell, lines)
         if (connection1 == start_cell and previous_cell != start_cell) or connection1 != previous_cell:
             next_cell = connection1
@@ -165,11 +165,13 @@ for direction in range(0, 2):
         current_char = lines[current_cell[0]][current_cell[1]]
         current_distance = current_distance + 1
     
-print(distance_rows)
-print(max_distance)
+#for distance_line in distance_rows:
+#    print(distance_rows)
+
+part_1_answer = max_distance
 
 #part_1_answer = get_part_1_answer(db)
-#print(part_1_answer)
+print(part_1_answer)
 
 # Result: 1974913025
 # Evaluation: Correct!
