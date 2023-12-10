@@ -17,36 +17,24 @@ def create_connection(db_file):
 
     return conn
 
-def insert_symbol(conn, symbol_tuple):
+def insert_input_line(conn, input_line_tuple):
     """
-    Insert symbol
+    Insert input_line
     :param conn:
-    :param symbol:
+    :param input_line_tuple:
     :return: row id
     """
-    sql = ''' INSERT INTO symbols(line_number, symbol, start_position, end_position)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO INPUT(line_number, input)
+              VALUES(?,?) '''
     cur = conn.cursor()
-    cur.execute(sql, symbol_tuple)
+    cur.execute(sql, input_line_tuple)
     conn.commit()
     return cur.lastrowid
 
-def insert_number(conn, number_tuple):
-    """
-    Insert number
-    :param conn:
-    :param number:
-    :return: row id
-    """
-    sql = ''' INSERT INTO numbers(line_number, number, start_position, end_position)
-              VALUES(?,?,?,?) '''
-    cur = conn.cursor()
-    cur.execute(sql, number_tuple)
-    conn.commit()
-    return cur.lastrowid
 
 # Import today's data
-data = [l.strip() for l in open("Input/input.txt", "rt")]
+data = [l.strip() for l in open("Input/example.txt", "rt")]
+#data = [l.strip() for l in open("Input/input.txt", "rt")]
 #print(data)
 
 
@@ -54,58 +42,50 @@ data = [l.strip() for l in open("Input/input.txt", "rt")]
 
 # Create needed database tables
 db = create_connection(r"data/pythonsqlite.db")
-db.execute("CREATE TABLE IF NOT EXISTS symbols (line_number NUMBER, symbol TEXT, start_position NUMBER, end_position NUMBER)")
-db.execute("DELETE FROM symbols")
-db.execute("CREATE TABLE IF NOT EXISTS numbers (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
-db.execute("DELETE FROM numbers")
+db.execute("CREATE TABLE IF NOT EXISTS INPUT (line_number NUMBER, input TEXT)")
+db.execute("DELETE FROM INPUT")
+#db.execute("DROP TABLE IF EXISTS NEW_SEQUENCES")
+db.execute("CREATE TABLE IF NOT EXISTS NEW_SEQUENCES (line_number NUMBER, new_sequence, extrapolated_value)")
+db.execute("DELETE FROM NEW_SEQUENCES")
+db.execute("CREATE TABLE IF NOT EXISTS SEQUENCES (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
+db.execute("DELETE FROM SEQUENCES")
 
-
+# Read input data into table
 lines = []
 line_number = 0
 for line in data:
-    symbols = re.sub('\d', ' ', line).replace('.', ' ').split()
-    #print(symbols)
-    numbers =  re.sub('\D', ' ', line).replace('.', ' ').split()
-    #print(numbers)
 
-    position = 0
-    for symbol in symbols:
-        position = line.find(symbol, position)
-        symbol_data = (line_number, symbol, position, position + len(symbol) - 1)
-        position = position + len(symbol)
-        #print(symbol_data)
-        row_id = insert_symbol(db, symbol_data)
-    position = 0
-    for number in numbers:
-        position = line.find(number, position)
-        number_data = (line_number, number, position, position + len(number) - 1)
-        position = position + len(number)
-        #print(number_data)
-        row_id = insert_number(db, number_data)
-    #print(line_number)
+    # Part 2 --->
+    reverse_line_list = [int(item) for item in line.split()]
+    #print(reverse_line_list)
+    reverse_line_list.reverse()
+    #print(reverse_line_list)
+    line =' '.join([str(item) for item in reverse_line_list])
+    # <--- Part 2
+
     line_number += 1
-    #print(line)
+    if line:
+        row_id = insert_input_line(db, (line_number, line))
+        new_sequence = get_next_number(line)
+        #print(line, ' ---> ', new_sequence)
+        row_id = insert_new_sequence(db, (line_number, new_sequence, [int(item) for item in new_sequence.split()][-1]))
+
+part_1_answer = get_part_1_answer(db)
+print(part_1_answer)
+
+# Result: 1974913025
+# Evaluation: Correct!
 
 
-db.execute("DROP TABLE IF EXISTS part_numbers")
-db.execute("CREATE TABLE part_numbers AS select distinct nbr.line_number, \
-                                                         sbl.line_number as symbol_line_number, \
-                                                         nbr.number as part_number, \
-                                                         sbl.symbol \
-FROM numbers AS nbr INNER JOIN symbols as sbl ON \
-nbr.line_number - 1 <= sbl.line_number AND nbr.line_number + 1 >= sbl.line_number \
-AND nbr.start_position - 1 <= sbl.end_position \
-AND nbr.end_position + 1 >= sbl.start_position")
+# Part 2
+# Oh, come on!
 
-cur = db.execute("SELECT sum(part_number) from part_numbers")
-query_result = cur.fetchall()
-print(query_result)
-# Result: 554003
+
 
 # Cleanup
 if db:
-    #db.execute("DROP TABLE IF EXISTS symbols")
-    #db.execute("DROP TABLE IF EXISTS numbers")
-    #db.execute("DROP TABLE IF EXISTS part_numbers")
+    #db.execute("DROP TABLE IF EXISTS INPUT")
+    #db.execute("DROP TABLE IF EXISTS SEQUENCES")
+    #db.execute("DROP TABLE IF EXISTS NEW_SEQUENCES")
     db.close()
 
