@@ -67,7 +67,8 @@ def find_2_connections(node_tuple, lines):
 
 # Import today's data
 #data = [l.strip() for l in open("Input/example.txt", "rt")]
-data = [l.strip() for l in open("Input/input.txt", "rt")]
+data = [l.strip() for l in open("Input/example2.txt", "rt")]
+#data = [l.strip() for l in open("Input/input.txt", "rt")]
 #print(data)
 
 
@@ -178,6 +179,30 @@ print(part_1_answer)
 
 
 # Part 2
+
+# Make a layout map, and mark pipe segments with 1s
+layout_map_rows = [row.copy() for row in distance_rows]
+
+for row_idx in range(len(layout_map_rows)):
+    for col_idx in range(len(layout_map_rows[row_idx])):
+        if layout_map_rows[row_idx][col_idx] > 0 or lines[row_idx][col_idx] == "S":
+            layout_map_rows[row_idx][col_idx] = 1
+        else:
+            layout_map_rows[row_idx][col_idx] = 0
+
+
+print("line_list:")
+for row in lines:
+    print(row)
+print()
+print("distance_rows:")
+for row in distance_rows:
+    print(row)
+print()
+print("layout_map_rows:")
+for row in layout_map_rows:
+    print(row)
+
 
 
 # Result: 
