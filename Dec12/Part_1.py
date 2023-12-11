@@ -45,40 +45,32 @@ db = create_connection(r"data/pythonsqlite.db")
 db.execute("CREATE TABLE IF NOT EXISTS INPUT (line_number NUMBER, input TEXT)")
 db.execute("DELETE FROM INPUT")
 #db.execute("DROP TABLE IF EXISTS NEW_SEQUENCES")
-db.execute("CREATE TABLE IF NOT EXISTS NEW_SEQUENCES (line_number NUMBER, new_sequence, extrapolated_value)")
-db.execute("DELETE FROM NEW_SEQUENCES")
-db.execute("CREATE TABLE IF NOT EXISTS SEQUENCES (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
-db.execute("DELETE FROM SEQUENCES")
+#db.execute("CREATE TABLE IF NOT EXISTS NEW_SEQUENCES (line_number NUMBER, new_sequence, extrapolated_value)")
+#db.execute("DELETE FROM NEW_SEQUENCES")
+#db.execute("CREATE TABLE IF NOT EXISTS SEQUENCES (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
+#db.execute("DELETE FROM SEQUENCES")
 
 # Read input data into table
 lines = []
 line_number = 0
 for line in data:
-
-    # Part 2 --->
-    reverse_line_list = [int(item) for item in line.split()]
-    #print(reverse_line_list)
-    reverse_line_list.reverse()
-    #print(reverse_line_list)
-    line =' '.join([str(item) for item in reverse_line_list])
-    # <--- Part 2
-
     line_number += 1
     if line:
         row_id = insert_input_line(db, (line_number, line))
-        new_sequence = get_next_number(line)
-        #print(line, ' ---> ', new_sequence)
-        row_id = insert_new_sequence(db, (line_number, new_sequence, [int(item) for item in new_sequence.split()][-1]))
+        lines.append(split(line,''))
 
-part_1_answer = get_part_1_answer(db)
-print(part_1_answer)
+
+#part_1_answer = get_part_1_answer(db)
+#print(part_1_answer)
 
 # Result: 1974913025
 # Evaluation: Correct!
 
 
 # Part 2
-# Oh, come on!
+
+# Result: 
+# Evaluation: 
 
 
 
