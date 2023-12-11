@@ -1,9 +1,11 @@
 # AoC 2023
 # Dec11
 
+from math import exp
 import re
 import sqlite3
 from sqlite3 import Error
+from telnetlib import GA
 
 # Database functions
 def create_connection(db_file):
@@ -33,8 +35,8 @@ def insert_input_line(conn, input_line_tuple):
 
 
 # Import today's data
-data = [l.strip() for l in open("Input/example.txt", "rt")]
-#data = [l.strip() for l in open("Input/input.txt", "rt")]
+#data = [l.strip() for l in open("Input/example.txt", "rt")]
+data = [l.strip() for l in open("Input/input.txt", "rt")]
 #print(data)
 
 
@@ -45,40 +47,89 @@ db = create_connection(r"data/pythonsqlite.db")
 db.execute("CREATE TABLE IF NOT EXISTS INPUT (line_number NUMBER, input TEXT)")
 db.execute("DELETE FROM INPUT")
 #db.execute("DROP TABLE IF EXISTS NEW_SEQUENCES")
-db.execute("CREATE TABLE IF NOT EXISTS NEW_SEQUENCES (line_number NUMBER, new_sequence, extrapolated_value)")
-db.execute("DELETE FROM NEW_SEQUENCES")
-db.execute("CREATE TABLE IF NOT EXISTS SEQUENCES (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
-db.execute("DELETE FROM SEQUENCES")
+#db.execute("CREATE TABLE IF NOT EXISTS NEW_SEQUENCES (line_number NUMBER, new_sequence, extrapolated_value)")
+#db.execute("DELETE FROM NEW_SEQUENCES")
+#db.execute("CREATE TABLE IF NOT EXISTS SEQUENCES (line_number NUMBER, number STRING, start_position NUMBER, end_position NUMBER)")
+#db.execute("DELETE FROM SEQUENCES")
 
 # Read input data into table
 lines = []
 line_number = 0
 for line in data:
-
-    # Part 2 --->
-    reverse_line_list = [int(item) for item in line.split()]
-    #print(reverse_line_list)
-    reverse_line_list.reverse()
-    #print(reverse_line_list)
-    line =' '.join([str(item) for item in reverse_line_list])
-    # <--- Part 2
-
     line_number += 1
     if line:
         row_id = insert_input_line(db, (line_number, line))
-        new_sequence = get_next_number(line)
-        #print(line, ' ---> ', new_sequence)
-        row_id = insert_new_sequence(db, (line_number, new_sequence, [int(item) for item in new_sequence.split()][-1]))
+        lines.append(line)
 
-part_1_answer = get_part_1_answer(db)
+expanded_universe = []
+galaxy_columns = [0 for idx in range(len(lines[0]))]
+print(galaxy_columns)
+for line in lines:
+    expanded_universe.append(line)
+    galaxy_idx = line.find("#")
+    if galaxy_idx < 0:
+        expanded_universe.append(line)
+    else:
+        while galaxy_idx >= 0:
+            galaxy_columns[galaxy_idx] = galaxy_columns[galaxy_idx] + 1
+            galaxy_idx = line.find("#", galaxy_idx + 1)
+    
+print(galaxy_columns)
+for line_number in range(len(expanded_universe)):
+    for idx in range(len(galaxy_columns) - 1, -1, -1):
+        if galaxy_columns[idx] == 0:
+            expanded_universe[line_number] = expanded_universe[line_number][:idx] + '.' + expanded_universe[line_number][idx:]
+
+    
+print("Original universe:")
+for line in lines:
+    print(line)
+print()
+print("Expanded universe:")
+for line in expanded_universe:
+    print(line)
+
+print()
+
+# Make a dictionay of galaxy coordintes
+galaxy_dict = {}
+galaxy_number = 0
+for row_idx in range(len(expanded_universe)):
+    print(expanded_universe[row_idx])
+    for column_idx in range(len(expanded_universe[row_idx])):
+        if expanded_universe[row_idx][column_idx] == '#':
+            galaxy_number = galaxy_number + 1
+            galaxy_dict[galaxy_number] = (row_idx, column_idx)
+            
+print()
+print("Galaxy dictionary:")
+print(galaxy_dict)
+
+
+galaxy_distances = {}
+for from_galaxy in range(1, galaxy_number):
+    for to_galaxy in range(from_galaxy + 1, galaxy_number + 1):
+        edge = (from_galaxy, to_galaxy)
+        from_coordinate = galaxy_dict[from_galaxy]
+        to_coordinate = galaxy_dict[to_galaxy]
+        galaxy_distance = abs(from_coordinate[0] - to_coordinate[0]) + abs(from_coordinate[1] - to_coordinate[1])
+        galaxy_distances[edge] = galaxy_distance
+
+print()
+print("Galaxy distances:")
+print(galaxy_distances)
+
+part_1_answer = sum(galaxy_distances.values())
 print(part_1_answer)
 
-# Result: 1974913025
+# Result: 9605127
 # Evaluation: Correct!
 
 
 # Part 2
-# Oh, come on!
+
+# Result: 
+# Evaluation: 
 
 
 
