@@ -35,8 +35,8 @@ def insert_input_line(conn, input_line_tuple):
 
 
 # Import today's data
-data = [l.strip() for l in open("Input/example.txt", "rt")]
-#data = [l.strip() for l in open("Input/input.txt", "rt")]
+#data = [l.strip() for l in open("Input/example.txt", "rt")]
+data = [l.strip() for l in open("Input/input.txt", "rt")]
 #print(data)
 
 
@@ -106,7 +106,7 @@ print()
 print("Galaxy dictionary:")
 print(galaxy_dict)
 
-voidness_multiplyer = 2
+voidness_multiplyer = 1000000
 voidness_column_indices = [idx for idx, element in enumerate(galaxy_columns) if element == 0]
 voidness_row_indices = [idx for idx, element in enumerate(galaxy_rows) if element == 0]
 
@@ -130,10 +130,10 @@ for from_galaxy in range(1, galaxy_number):
                 voidness_counter = voidness_counter + 1
         galaxy_distance = abs(from_coordinate[0] - to_coordinate[0]) + abs(from_coordinate[1] - to_coordinate[1]) + voidness_counter * (voidness_multiplyer - 1)
         galaxy_distances[edge] = galaxy_distance
-        print()
-        print(edge)
-        print(voidness_counter)
-        print(galaxy_distance)
+        #print()
+        #print(edge)
+        #print(voidness_counter)
+        #print(galaxy_distance)
 
 print()
 print("Galaxy distances:")
